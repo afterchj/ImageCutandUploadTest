@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 new Thread(t).start();
-                if (bitmap!=null){
+                if (bitmap != null) {
                     mImage.setImageBitmap(bitmap);
                 }
             }
@@ -103,8 +103,7 @@ public class MainActivity extends AppCompatActivity {
                         startActivityForResult(intent, CHOOSE_PICTURE);
                         break;
                     case TAKE_PICTURE: // 拍照
-                        Intent openCameraIntent = new Intent(
-                                MediaStore.ACTION_IMAGE_CAPTURE);
+                        Intent openCameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                         tempUri = Uri.fromFile(new File(Environment.getExternalStorageDirectory(), "temp_image.jpg"));
                         // 将拍照所得的相片保存到SD卡根目录
                         openCameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, tempUri);
@@ -197,9 +196,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            Bundle data = msg.getData();
-            String val = data.getString("value");
-            Log.i("result", "请求结果:" + val);
+//            Bundle data = msg.getData();
+//            String val = data.getString("value");
+            if (msg.what == 000) {
+                Toast.makeText(MainActivity.this, "头像上传成功！", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(MainActivity.this, "系统异常！", Toast.LENGTH_SHORT).show();
+            }
+            Log.i("result", "请求结果:" + msg.what);
         }
     };
 
@@ -213,17 +217,18 @@ public class MainActivity extends AppCompatActivity {
             params.put("desc", "测试内容");
             Map<String, File> files = new HashMap<String, File>();
             files.put("file", file);
-            String request = "";
+            String response = "";
             try {
-                request = UploadUtil.uploadFile(uploadUrl, params, file);
+                response = UploadUtil.uploadFile(uploadUrl, params, file);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println("request=" + request);
+            System.out.println("response=" + response);
             Message msg = new Message();
-            Bundle data = new Bundle();
-            data.putString("value", "请求结果");
-            msg.setData(data);
+            msg.what = Integer.valueOf(response);
+//            Bundle data = new Bundle();
+//            data.putString("result", response);
+//            msg.setData(data);
             handler.sendMessage(msg);
         }
     };
@@ -236,15 +241,15 @@ public class MainActivity extends AppCompatActivity {
                 //对资源链接
                 URL url = new URL(iPath);
                 //打开输入流
-                InputStream inputStream = url.openStream();
+//                InputStream inputStream = url.openStream();
                 //对网上资源进行下载转换位图图片
-                bitmap = BitmapFactory.decodeStream(inputStream);
-                handler.sendEmptyMessage(111);
-                inputStream.close();
+//                bitmap = BitmapFactory.decodeStream(inputStream);
+//                handler.sendEmptyMessage(111);
+//                inputStream.close();
 
                 //再一次打开
-                inputStream = url.openStream();
-                File file = new File(Environment.getExternalStorageDirectory() + File.separator+fileName);
+                InputStream inputStream = url.openStream();
+                File file = new File(Environment.getExternalStorageDirectory() + File.separator + fileName);
                 FileOutputStream fileOutputStream = new FileOutputStream(file);
                 int hasRead = 0;
                 while ((hasRead = inputStream.read()) != -1) {
