@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,7 +17,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.BufferedOutputStream;
@@ -28,15 +28,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
     private File file;
-    private String fileName = UUID.randomUUID().toString().replace("-", "") + ".jpg";
-    private ImageView mImage;
-    String uploadUrl = "http://192.168.0.6:8080/web-ssm/file/upload2";
+    String path = Environment.getExternalStorageDirectory() + "/aaa/bbb/";
+    private String fileName = "9de2725281b44136b04e474d85061151.jpg";
+    private MyImageView mImage;
+    String uploadUrl = "http://192.168.51.75:8080/ums3-client2/heads/upload";
+    String uploadUrl1 = "http://192.168.51.75:8080/web-ssm/file/upload2";
     private Bitmap mBitmap;
-    private Bitmap bitmap;
     protected static final int CHOOSE_PICTURE = 0;
     protected static final int TAKE_PICTURE = 1;
     protected static Uri tempUri;
@@ -53,17 +53,13 @@ public class MainActivity extends AppCompatActivity {
             StrictMode.setVmPolicy(builder.build());
         }
 
-        final MyImageView myImageView = (MyImageView) findViewById(R.id.iv_image);
-        myImageView.setImageURL("http://192.168.0.6:8080/web-ssm/img/head.jpg");
+        mImage = (MyImageView) findViewById(R.id.iv_image);
 
         Button button = (Button) findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new Thread(t).start();
-                if (bitmap != null) {
-                    mImage.setImageBitmap(bitmap);
-                }
+                new Thread(downloadThread).start();
             }
         });
         initUI();
@@ -71,14 +67,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initUI() {
-        mImage = (ImageView) findViewById(R.id.iv_image);
+        Bitmap bitmap= BitmapFactory.decodeFile(path+fileName);
+        if (bitmap != null) {
+            mImage.setImageBitmap(bitmap);
+        } else {
+            mImage.setImageURL("http://192.168.51.75:8080/ums3-client2/img/head.jpg");
+        }
     }
 
     private void initListeners() {
         mImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                mImage.setImageURI(Uri.parse("http://localhost:8080/web-ssm/img/head.jpg"));
                 showChoosePicDialog();
             }
         });
@@ -169,7 +169,6 @@ public class MainActivity extends AppCompatActivity {
         Bundle extras = data.getExtras();
         if (extras != null) {
             mBitmap = extras.getParcelable("data");
-            file = saveFile(mBitmap, fileName);
             //这里图片是方形的，可以用一个工具类处理成圆形（很多头像都是圆形，这种工具类网上很多不再详述）
             mImage.setImageBitmap(mBitmap);//显示图片
             new Thread(runnable).start();
@@ -178,17 +177,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public File saveFile(Bitmap bm, String fileName) throws IOException {
-        String path = Environment.getExternalStorageDirectory() + "/heads/";
+    public File saveFile() {
         File dirFile = new File(path);
         if (!dirFile.exists()) {
             dirFile.mkdir();
         }
         File myCaptureFile = new File(path + fileName);
-        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(myCaptureFile));
-        bm.compress(Bitmap.CompressFormat.JPEG, 80, bos);
-        bos.flush();
-        bos.close();
+        BufferedOutputStream bos = null;
+        try {
+            bos = new BufferedOutputStream(new FileOutputStream(myCaptureFile));
+            mBitmap.compress(Bitmap.CompressFormat.JPEG, 80, bos);
+            bos.flush();
+            bos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return myCaptureFile;
     }
 
@@ -201,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
             if (msg.what == 000) {
                 Toast.makeText(MainActivity.this, "头像上传成功！", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(MainActivity.this, "系统异常！", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "头像上传失败！", Toast.LENGTH_SHORT).show();
             }
             Log.i("result", "请求结果:" + msg.what);
         }
@@ -211,32 +214,35 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             // TODO: http request.
-//            File file = new File(Environment.getExternalStorageDirectory(), "temp_image.jpg");
+            String param = "{\"task_id\":\"29630\",\"auth_id\":\"1000375122\"}";
+            file = saveFile();
             Map<String, String> params = new HashMap<String, String>();
-            params.put("fileName", "测试文件");
+            params.put("params", fileName.substring(fileName.lastIndexOf(".")));
             params.put("desc", "测试内容");
             Map<String, File> files = new HashMap<String, File>();
             files.put("file", file);
             String response = "";
             try {
-                response = UploadUtil.uploadFile(uploadUrl, params, file);
+//                response = UploadUtil.uploadFile(uploadUrl, params, file);
+                response = HttpClientUtil.uploadFile(uploadUrl, param, file);
             } catch (IOException e) {
                 e.printStackTrace();
+                handler.sendEmptyMessage(200);
             }
             System.out.println("response=" + response);
-            Message msg = new Message();
-            msg.what = Integer.valueOf(response);
+//            Message msg = new Message();
+//            msg.what = Integer.valueOf(response);
 //            Bundle data = new Bundle();
 //            data.putString("result", response);
 //            msg.setData(data);
-            handler.sendMessage(msg);
+            handler.sendEmptyMessage(Integer.valueOf(response));
         }
     };
     //为了下载图片资源，开辟一个新的子线程
-    Thread t = new Thread() {
+    Thread downloadThread = new Thread() {
         public void run() {
             //下载图片的路径
-            String iPath = "http://192.168.0.6:8080/web-ssm/img/" + fileName;
+            String iPath = "http://192.168.51.75:8080/ums3-client2/img/" + fileName;
             try {
                 //对资源链接
                 URL url = new URL(iPath);
@@ -257,10 +263,13 @@ public class MainActivity extends AppCompatActivity {
                 }
                 fileOutputStream.close();
                 inputStream.close();
+                handler.sendEmptyMessage(000);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
+                handler.sendEmptyMessage(200);
             } catch (IOException e) {
                 e.printStackTrace();
+                handler.sendEmptyMessage(200);
             }
         }
     };
