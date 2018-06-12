@@ -29,8 +29,18 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class MainActivity extends AppCompatActivity {
-    private File file;
+    //    private File file;
     String path = Environment.getExternalStorageDirectory() + "/aaa/bbb/";
     private String fileName = "9de2725281b44136b04e474d85061151.jpg";
     private MyImageView mImage;
@@ -67,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initUI() {
-        Bitmap bitmap= BitmapFactory.decodeFile(path+fileName);
+        Bitmap bitmap = BitmapFactory.decodeFile(path + fileName);
         if (bitmap != null) {
             mImage.setImageBitmap(bitmap);
         } else {
@@ -171,10 +181,49 @@ public class MainActivity extends AppCompatActivity {
             mBitmap = extras.getParcelable("data");
             //这里图片是方形的，可以用一个工具类处理成圆形（很多头像都是圆形，这种工具类网上很多不再详述）
             mImage.setImageBitmap(mBitmap);//显示图片
-            new Thread(runnable).start();
-
-            //在这个地方可以写上上传该图片到服务器的代码，后期将单独写一篇这方面的博客，敬请期待...
         }
+        upload();
+//new Thread(runnable).start();
+    }
+
+    public void upload() {
+        //步骤4:创建Retrofit对象
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://192.168.51.75:8080/ums3-client2/heads/") // 设置 网络请求 Url
+                .addConverterFactory(GsonConverterFactory.create()) //设置使用Gson解析(记得加入依赖)
+                .build();
+
+        // 步骤5:创建 网络请求接口 的实例
+        PostRequest_Interface request = retrofit.create(PostRequest_Interface.class);
+        File file = saveFile();
+
+        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+
+        MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
+
+        String descriptionString = "This is a params";
+        RequestBody description = RequestBody.create(MediaType.parse("text/plain"), descriptionString);
+
+        Call<Translation> call = request.upload(description, body);
+        call.enqueue(new Callback<Translation>() {
+            @Override
+            public void onResponse(Call<Translation> call, Response<Translation> response) {
+                if (response.body() != null) {
+                    try {
+                        Toast.makeText(MainActivity.this, "头像上传成功！", Toast.LENGTH_SHORT).show();
+                        System.out.println("result=============》" + response.body().getResult());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Translation> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "头像上传失败！", Toast.LENGTH_SHORT).show();
+                t.printStackTrace();
+            }
+        });
     }
 
     public File saveFile() {
@@ -215,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             // TODO: http request.
             String param = "{\"task_id\":\"29630\",\"auth_id\":\"1000375122\"}";
-            file = saveFile();
+            File file = saveFile();
             Map<String, String> params = new HashMap<String, String>();
             params.put("params", fileName.substring(fileName.lastIndexOf(".")));
             params.put("desc", "测试内容");
