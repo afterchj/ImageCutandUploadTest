@@ -17,7 +17,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.alanjet.imagecutanduploadtest.util.Constant;
+import com.alanjet.imagecutanduploadtest.util.FileUtils;
+import com.alanjet.imagecutanduploadtest.util.MyLog;
+import com.alanjet.imagecutanduploadtest.util.RetrofitUtil;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -38,6 +45,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
     //    private File file;
@@ -52,31 +60,40 @@ public class MainActivity extends AppCompatActivity {
     protected static Uri tempUri;
     private static final int CROP_SMALL_PICTURE = 2;
 
+    private ProgressBar mPb;
+    private TextView mTv;
+    private Button button;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         File f = new File(Environment.getExternalStorageDirectory(), "temp_image.jpg");
         System.out.println("----------------->" + f.getAbsolutePath());
         setContentView(R.layout.activity_main);
+        initUI();
+        initListeners();
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
             StrictMode.setVmPolicy(builder.build());
         }
 
-        mImage = (MyImageView) findViewById(R.id.iv_image);
 
-        Button button = (Button) findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new Thread(downloadThread).start();
+                startDownload();
+//                new Thread(downloadThread).start();
             }
         });
-        initUI();
-        initListeners();
+
     }
 
     private void initUI() {
+        button = (Button) findViewById(R.id.button);
+        mPb = (ProgressBar) findViewById(R.id.pb);
+        mTv = (TextView) findViewById(R.id.tv);
+        mImage = (MyImageView) findViewById(R.id.iv_image);
         Bitmap bitmap = BitmapFactory.decodeFile(path + fileName);
         if (bitmap != null) {
             mImage.setImageBitmap(bitmap);
@@ -92,6 +109,57 @@ public class MainActivity extends AppCompatActivity {
                 showChoosePicDialog();
             }
         });
+    }
+
+    private void startDownload() {
+
+        String downloadUrl = "195D0D?qbsrc=51&asr=4286";
+
+        Call<ResponseBody> responseBodyCall = RetrofitUtil.getInstance(Constant.QQ.getBaseUrl()).create(PostRequest_Interface.class).downloadFile(downloadUrl);
+
+        responseBodyCall.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, final Response<ResponseBody> response) {
+
+                MyLog.d("vivi", response.message() + "  length  " + response.body().contentLength() + "  type " + response.body().contentType());
+                //建立一个文件
+                final File file = FileUtils.createFile(MainActivity.this);
+                //下载文件放在子线程
+                new Thread() {
+                    @Override
+                    public void run() {
+                        super.run();
+                        //保存到本地
+                        FileUtils.writeFile2Disk(response, file, new HttpCallBack() {
+
+                            @Override
+                            public void onLoading(final long current, final long total) {
+                                /**
+                                 * 更新进度条
+                                 */
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+//                                        MyLog.d("vivi", current + " to " + total);
+//                                        MyLog.d("vivi", " runOnUiThread  " + currentThread().getName());
+                                        mTv.setText(current + "");
+                                        mPb.setMax((int) total);
+                                        mPb.setProgress((int) current);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }.start();
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                t.printStackTrace();
+                MyLog.d("vivi", t.getMessage() + "  " + t.toString());
+            }
+        });
+
     }
 
     /**
@@ -188,23 +256,17 @@ public class MainActivity extends AppCompatActivity {
 
     public void upload() {
         //步骤4:创建Retrofit对象
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.51.75:8080/ums3-client2/heads/") // 设置 网络请求 Url
-                .addConverterFactory(GsonConverterFactory.create()) //设置使用Gson解析(记得加入依赖)
-                .build();
 
         // 步骤5:创建 网络请求接口 的实例
-        PostRequest_Interface request = retrofit.create(PostRequest_Interface.class);
-        File file = saveFile();
-
-        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
-
-        MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
-
         String descriptionString = "This is a params";
         RequestBody description = RequestBody.create(MediaType.parse("text/plain"), descriptionString);
+        File file = saveFile();
+        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+        MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
 
-        Call<Translation> call = request.upload(description, body);
+//        Call<Translation> call = request.upload(description, body);
+        Call<Translation> call = RetrofitUtil.getInstance(Constant.UMS3_CLIENT2.getBaseUrl()).create(PostRequest_Interface.class).upload(description,body);
+
         call.enqueue(new Callback<Translation>() {
             @Override
             public void onResponse(Call<Translation> call, Response<Translation> response) {
