@@ -7,7 +7,7 @@ package com.alanjet.imagecutanduploadtest.util;
 public enum Constant {
     QQ("http://surl.qq.com/"),
     WEB_SSM("http://192.168.51.75:8080/web-ssm/file/"),
-    UMS3_CLIENT2("http://192.168.51.75:8080/ums3-client2/heads/");
+    UMS3_CLIENT2("http://www.uichange.com/ums3-client2/heads/");
 
     private String baseUrl;
 

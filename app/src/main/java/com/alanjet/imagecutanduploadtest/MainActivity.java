@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     String path = Environment.getExternalStorageDirectory() + "/aaa/bbb/";
     private String fileName = "9de2725281b44136b04e474d85061151.jpg";
     private MyImageView mImage;
-    String uploadUrl = "http://192.168.51.75:8080/ums3-client2/heads/upload";
+    String uploadUrl = "http://www.uichange.com/ums3-client2/heads/upload";
     String uploadUrl1 = "http://192.168.51.75:8080/web-ssm/file/upload2";
     private Bitmap mBitmap;
     protected static final int CHOOSE_PICTURE = 0;
@@ -259,21 +259,22 @@ public class MainActivity extends AppCompatActivity {
 
         // 步骤5:创建 网络请求接口 的实例
         String descriptionString = "This is a params";
-        RequestBody description = RequestBody.create(MediaType.parse("text/plain"), descriptionString);
+        RequestBody uid = RequestBody.create(MediaType.parse("text/plain"), "14715689");
         File file = saveFile();
         RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
         MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
 
 //        Call<Translation> call = request.upload(description, body);
-        Call<Translation> call = RetrofitUtil.getInstance(Constant.UMS3_CLIENT2.getBaseUrl()).create(PostRequest_Interface.class).upload(description,body);
+        Call<Translation> call = RetrofitUtil.getInstance(Constant.UMS3_CLIENT2.getBaseUrl()).create(PostRequest_Interface.class).upload(uid, body);
 
         call.enqueue(new Callback<Translation>() {
             @Override
             public void onResponse(Call<Translation> call, Response<Translation> response) {
+                System.out.println("result=" + response.body().toString());
                 if (response.body() != null) {
                     try {
                         Toast.makeText(MainActivity.this, "头像上传成功！", Toast.LENGTH_SHORT).show();
-                        System.out.println("result=============》" + response.body().getResult());
+                        System.out.println("result=" + response.body().getResult() + ",headUrl=" + response.body().getHeadUrl());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -338,7 +339,7 @@ public class MainActivity extends AppCompatActivity {
                 response = HttpClientUtil.uploadFile(uploadUrl, param, file);
             } catch (IOException e) {
                 e.printStackTrace();
-                handler.sendEmptyMessage(200);
+//                handler.sendEmptyMessage(200);
             }
             System.out.println("response=" + response);
 //            Message msg = new Message();
@@ -346,7 +347,7 @@ public class MainActivity extends AppCompatActivity {
 //            Bundle data = new Bundle();
 //            data.putString("result", response);
 //            msg.setData(data);
-            handler.sendEmptyMessage(Integer.valueOf(response));
+//            handler.sendEmptyMessage(Integer.valueOf(response));
         }
     };
     //为了下载图片资源，开辟一个新的子线程
@@ -374,13 +375,13 @@ public class MainActivity extends AppCompatActivity {
                 }
                 fileOutputStream.close();
                 inputStream.close();
-                handler.sendEmptyMessage(000);
+//                handler.sendEmptyMessage(000);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
-                handler.sendEmptyMessage(200);
+//                handler.sendEmptyMessage(200);
             } catch (IOException e) {
                 e.printStackTrace();
-                handler.sendEmptyMessage(200);
+//                handler.sendEmptyMessage(200);
             }
         }
     };

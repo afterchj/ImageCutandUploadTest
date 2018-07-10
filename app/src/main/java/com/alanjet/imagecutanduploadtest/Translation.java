@@ -7,11 +7,21 @@ package com.alanjet.imagecutanduploadtest;
 public class Translation {
     private String result;
 
+    private String headUrl;
+
     public String getResult() {
         return result;
     }
 
     public void setResult(String result) {
         this.result = result;
+    }
+
+    public String getHeadUrl() {
+        return headUrl;
+    }
+
+    public void setHeadUrl(String headUrl) {
+        this.headUrl = headUrl;
     }
 }

@@ -18,7 +18,7 @@ import retrofit2.http.Url;
 public interface PostRequest_Interface {
     @POST("upload")
     @Multipart
-    Call<Translation> upload(@Part("params") RequestBody description, @Part MultipartBody.Part file);
+    Call<Translation> upload(@Part("uid") RequestBody uid, @Part MultipartBody.Part file);
 
     @Streaming //大文件时要加不然会OOM
     @GET
