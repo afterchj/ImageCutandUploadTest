@@ -9,10 +9,10 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
  */
 
 public class RetrofitUtil {
-    private static RetrofitUtil RETROFITUTIL;
+
     private Retrofit mRetrofit;
 
-    private RetrofitUtil(String baseUrl) {
+    public RetrofitUtil(String baseUrl) {
         mRetrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)  //添加baseurl
                 .addConverterFactory(ScalarsConverterFactory.create()) //添加返回为字符串的支持
@@ -20,18 +20,6 @@ public class RetrofitUtil {
                 .build();
     }
 
-    public static RetrofitUtil getInstance(String baseUrl) {
-
-        if (RETROFITUTIL == null) {
-            synchronized (RetrofitUtil.class) {
-                if (RETROFITUTIL == null) {
-                    RETROFITUTIL = new RetrofitUtil(baseUrl);
-                }
-            }
-        }
-
-        return RETROFITUTIL;
-    }
 
     public <T> T create(Class<T> service) {
         return mRetrofit.create(service);
