@@ -43,9 +43,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-import retrofit2.converter.scalars.ScalarsConverterFactory;
+
 
 public class MainActivity extends AppCompatActivity {
     //    private File file;
@@ -98,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         if (bitmap != null) {
             mImage.setImageBitmap(bitmap);
         } else {
-            mImage.setImageURL("http://192.168.51.75:8080/ums3-client2/img/head.jpg");
+            mImage.setImageURL(Constant.HEAD.getBaseUrl());
         }
     }
 
@@ -113,22 +111,24 @@ public class MainActivity extends AppCompatActivity {
 
     private void startDownload() {
 
-        String downloadUrl = "195D0D?qbsrc=51&asr=4286";
+//        final Bitmap[] bitmap = new Bitmap[1];
+        String downloadUrl = "user/app-debug.apk";
 
-        Call<ResponseBody> responseBodyCall = RetrofitUtil.getInstance(Constant.QQ.getBaseUrl()).create(PostRequest_Interface.class).downloadFile(downloadUrl);
+        Call<ResponseBody> responseBodyCall = new RetrofitUtil(Constant.DEFAULT.getBaseUrl()).create(PostRequest_Interface.class).downloadFile(downloadUrl);
 
         responseBodyCall.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, final Response<ResponseBody> response) {
 
                 MyLog.d("vivi", response.message() + "  length  " + response.body().contentLength() + "  type " + response.body().contentType());
+//                InputStream is = response.body().byteStream();
+//                bitmap[0] = BitmapFactory.decodeStream(is);
                 //建立一个文件
                 final File file = FileUtils.createFile(MainActivity.this);
                 //下载文件放在子线程
                 new Thread() {
                     @Override
                     public void run() {
-                        super.run();
                         //保存到本地
                         FileUtils.writeFile2Disk(response, file, new HttpCallBack() {
 
@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
      */
     protected void cutImage(Uri uri) {
         if (uri == null) {
-            Log.i("alanjet", "The uri is not exist.");
+            Log.i("tip", "The uri is not exist.");
         }
         tempUri = uri;
         Intent intent = new Intent("com.android.camera.action.CROP");
@@ -255,17 +255,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void upload() {
-        //步骤4:创建Retrofit对象
-
-        // 步骤5:创建 网络请求接口 的实例
+        //创建Retrofit对象
+        //创建 网络请求接口 的实例
         String descriptionString = "This is a params";
         RequestBody uid = RequestBody.create(MediaType.parse("text/plain"), "14715689");
         File file = saveFile();
         RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
         MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
 
-//        Call<Translation> call = request.upload(description, body);
-        Call<Translation> call = RetrofitUtil.getInstance(Constant.UMS3_CLIENT2.getBaseUrl()).create(PostRequest_Interface.class).upload(uid, body);
+        Call<Translation> call = new RetrofitUtil(Constant.UMS3_CLIENT2.getBaseUrl()).create(PostRequest_Interface.class).upload(uid, body);
 
         call.enqueue(new Callback<Translation>() {
             @Override
@@ -290,12 +288,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public File saveFile() {
+        File myCaptureFile = new File(path + fileName);
         File dirFile = new File(path);
         if (!dirFile.exists()) {
             dirFile.mkdir();
         }
-        File myCaptureFile = new File(path + fileName);
-        BufferedOutputStream bos = null;
+        BufferedOutputStream bos;
         try {
             bos = new BufferedOutputStream(new FileOutputStream(myCaptureFile));
             mBitmap.compress(Bitmap.CompressFormat.JPEG, 80, bos);
