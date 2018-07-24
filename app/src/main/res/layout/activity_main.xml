@@ -1,49 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_down_load"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:orientation="vertical"
-    tools:context="com.alanjet.imagecutanduploadtest.MainActivity">
+    android:background="#d8e0e8"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/change"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="头像更换" />
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="30dp"
+        android:textSize="15sp"
+        android:text="单击图片更换头像" />
 
     <com.alanjet.imagecutanduploadtest.MyImageView
         android:id="@+id/iv_image"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:background="#333"
-        android:layout_below="@+id/change" />
+        android:layout_marginTop="20dp"
+        android:layout_gravity="center"
+        android:background="#333" />
 
-    <Button
-        android:text="加载网络文件"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+    <TextView
         android:id="@+id/button"
-        android:layout_below="@+id/iv_image" />
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:layout_marginTop="15dp"
+        android:gravity="center"
+        android:autoLink="none"
+        android:textIsSelectable="true"
+        android:textColor="#4294dc"
+        android:text="点击下载源代码：https://github.com/afterchj/web-ssm" />
 
     <ProgressBar
         android:id="@+id/pb"
-        android:layout_margin="5dp"
+        style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="2dp"
-        style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
-        android:progress="10"/>
+        android:layout_margin="5dp"
+        android:progress="10" />
 
     <TextView
         android:id="@+id/tv"
-        android:gravity="center"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:gravity="center" />
 
 </LinearLayout>

@@ -16,7 +16,6 @@ import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,8 +49,6 @@ public class MainActivity extends AppCompatActivity {
     String path = Environment.getExternalStorageDirectory() + "/aaa/bbb/";
     private String fileName = "9de2725281b44136b04e474d85061151.jpg";
     private MyImageView mImage;
-    String uploadUrl = "http://www.uichange.com/ums3-client2/heads/upload";
-    String uploadUrl1 = "http://192.168.51.75:8080/web-ssm/file/upload2";
     private Bitmap mBitmap;
     protected static final int CHOOSE_PICTURE = 0;
     protected static final int TAKE_PICTURE = 1;
@@ -60,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ProgressBar mPb;
     private TextView mTv;
-    private Button button;
+    private TextView button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,14 +78,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startDownload();
-//                new Thread(downloadThread).start();
             }
         });
 
     }
 
     private void initUI() {
-        button = (Button) findViewById(R.id.button);
+        button = (TextView) findViewById(R.id.button);
         mPb = (ProgressBar) findViewById(R.id.pb);
         mTv = (TextView) findViewById(R.id.tv);
         mImage = (MyImageView) findViewById(R.id.iv_image);
@@ -125,13 +121,18 @@ public class MainActivity extends AppCompatActivity {
 //                bitmap[0] = BitmapFactory.decodeStream(is);
                 //建立一个文件
                 final File file = FileUtils.createFile(MainActivity.this);
+                if (file.length()>0){
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
+                    startActivity(intent);
+                    return;
+                }
                 //下载文件放在子线程
                 new Thread() {
                     @Override
                     public void run() {
                         //保存到本地
                         FileUtils.writeFile2Disk(response, file, new HttpCallBack() {
-
                             @Override
                             public void onLoading(final long current, final long total) {
                                 /**
@@ -145,6 +146,11 @@ public class MainActivity extends AppCompatActivity {
                                         mTv.setText(current + "");
                                         mPb.setMax((int) total);
                                         mPb.setProgress((int) current);
+                                        if (current == total) {
+                                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                                            intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
+                                            startActivity(intent);
+                                        }
                                     }
                                 });
                             }
@@ -334,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
             String response = "";
             try {
 //                response = UploadUtil.uploadFile(uploadUrl, params, file);
-                response = HttpClientUtil.uploadFile(uploadUrl, param, file);
+                response = HttpClientUtil.uploadFile(Constant.UMS3_CLIENT2.getBaseUrl() + "upload", param, file);
             } catch (IOException e) {
                 e.printStackTrace();
 //                handler.sendEmptyMessage(200);

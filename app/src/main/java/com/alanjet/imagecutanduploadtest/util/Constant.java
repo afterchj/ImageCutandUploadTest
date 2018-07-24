@@ -6,7 +6,7 @@ package com.alanjet.imagecutanduploadtest.util;
 
 public enum Constant {
     HEAD("http://www.uichange.com/ums3-share/user/14715689.jpg"),
-    WEB_SSM("http://www.uichange.com/ums3-share/user/qrcode.jpg"),
+    WEB_SSM("https://github.com/afterchj/web-ssm"),
     DEFAULT("http://www.uichange.com/ums3-share/"),
     UMS3_CLIENT2("http://www.uichange.com/ums3-client2/heads/");
 
