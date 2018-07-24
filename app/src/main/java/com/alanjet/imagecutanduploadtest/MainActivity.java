@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
 //                bitmap[0] = BitmapFactory.decodeStream(is);
                 //建立一个文件
                 final File file = FileUtils.createFile(MainActivity.this);
-                if (file.length()>0){
+                if (file.length() > 0) {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
                     intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
                     startActivity(intent);
@@ -256,16 +256,33 @@ public class MainActivity extends AppCompatActivity {
             //这里图片是方形的，可以用一个工具类处理成圆形（很多头像都是圆形，这种工具类网上很多不再详述）
             mImage.setImageBitmap(mBitmap);//显示图片
         }
-        upload();
-//new Thread(runnable).start();
+        File file = saveFile(mBitmap);
+        upload(file);//上传裁剪后的图片
     }
 
-    public void upload() {
+    public File saveFile(Bitmap bitmap) {
+        File myCaptureFile = new File(path + fileName);
+        File dirFile = new File(path);
+        if (!dirFile.exists()) {
+            dirFile.mkdir();
+        }
+        BufferedOutputStream bos;
+        try {
+            bos = new BufferedOutputStream(new FileOutputStream(myCaptureFile));
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bos);
+            bos.flush();
+            bos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return myCaptureFile;
+    }
+
+    public void upload(File file) {
         //创建Retrofit对象
         //创建 网络请求接口 的实例
         String descriptionString = "This is a params";
         RequestBody uid = RequestBody.create(MediaType.parse("text/plain"), "14715689");
-        File file = saveFile();
         RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
         MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
 
@@ -293,23 +310,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public File saveFile() {
-        File myCaptureFile = new File(path + fileName);
-        File dirFile = new File(path);
-        if (!dirFile.exists()) {
-            dirFile.mkdir();
-        }
-        BufferedOutputStream bos;
-        try {
-            bos = new BufferedOutputStream(new FileOutputStream(myCaptureFile));
-            mBitmap.compress(Bitmap.CompressFormat.JPEG, 80, bos);
-            bos.flush();
-            bos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return myCaptureFile;
-    }
 
     Handler handler = new Handler() {
         @Override
@@ -331,7 +331,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             // TODO: http request.
             String param = "{\"task_id\":\"29630\",\"auth_id\":\"1000375122\"}";
-            File file = saveFile();
+            File file = saveFile(mBitmap);
             Map<String, String> params = new HashMap<String, String>();
             params.put("params", fileName.substring(fileName.lastIndexOf(".")));
             params.put("desc", "测试内容");
