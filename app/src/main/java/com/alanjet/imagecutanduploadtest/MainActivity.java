@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alanjet.imagecutanduploadtest.util.Constant;
+import com.alanjet.imagecutanduploadtest.util.DynamicPermissionCheck;
 import com.alanjet.imagecutanduploadtest.util.FileUtils;
 import com.alanjet.imagecutanduploadtest.util.MyLog;
 import com.alanjet.imagecutanduploadtest.util.RetrofitUtil;
@@ -67,12 +68,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initUI();
         initListeners();
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
             StrictMode.setVmPolicy(builder.build());
         }
-
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -100,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
         mImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                new DynamicPermissionCheck(MainActivity.this).checkPermission();
                 showChoosePicDialog();
             }
         });
@@ -256,8 +256,10 @@ public class MainActivity extends AppCompatActivity {
             //这里图片是方形的，可以用一个工具类处理成圆形（很多头像都是圆形，这种工具类网上很多不再详述）
             mImage.setImageBitmap(mBitmap);//显示图片
         }
+
         File file = saveFile(mBitmap);
-        upload(file);//上传裁剪后的图片
+        upload(file);
+
     }
 
     public File saveFile(Bitmap bitmap) {
