@@ -16,6 +16,7 @@ import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar mPb;
     private TextView mTv;
     private TextView button;
+    private Button video;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +82,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        video.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, VideoActivity.class);
+                startActivity(intent);
+            }
+        });
+
     }
 
     private void initUI() {
@@ -87,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         mPb = (ProgressBar) findViewById(R.id.pb);
         mTv = (TextView) findViewById(R.id.tv);
         mImage = (MyImageView) findViewById(R.id.iv_image);
+        video = (Button) findViewById(R.id.video);
         Bitmap bitmap = BitmapFactory.decodeFile(path + fileName);
         if (bitmap != null) {
             mImage.setImageBitmap(bitmap);
